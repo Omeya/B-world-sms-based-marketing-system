@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg"
+    >
+
+    <RelativeLayout 
+        android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/relative_header"
+        ></RelativeLayout>
+    
+    
+    <TableLayout
+        android:id="@+id/table_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:paddingLeft="@dimen/home_page_padding"
+        android:paddingRight="@dimen/home_page_padding"
+        android:layout_below="@+id/relative_header"
+        android:stretchColumns="*" >
+    <TableRow
+            android:id="@+id/tableRow01"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+        <ImageView
+            android:id="@+id/image_profile"
+            android:layout_width="@dimen/signup_page_image_size"
+            android:layout_height="@dimen/signup_page_image_size"
+            android:src="@drawable/profile_thumb" />
+
+        <LinearLayout
+            android:id="@+id/linear_names"
+            android:layout_width="wrap_content"
+            android:layout_weight="0.75"
+            android:layout_height="wrap_content"
+          
+            android:orientation="vertical" >
+
+            <EditText
+                android:id="@+id/edt_firstname"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/first_name"
+                android:imeOptions="actionNext"
+                android:inputType="text" >
+            </EditText>
+
+            <EditText
+                android:id="@+id/edt_lastname"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/last_name"
+                android:imeOptions="actionNext"
+                android:inputType="text" />
+        </LinearLayout>
+   </TableRow>
+
+
+        <TableRow
+            android:id="@+id/tableRow1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                 android:textColor="@android:color/black"
+                android:text="@string/email" />
+
+            <EditText
+               android:layout_span="8"
+                android:id="@+id/edt_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="textEmailAddress" >
+            </EditText>
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/tableRow2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                  android:textStyle="bold"
+                   android:textColor="@android:color/black"
+                android:text="@string/password" />
+
+            <EditText
+                android:id="@+id/edt_password"
+                android:layout_span="8"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="textPassword" >
+            </EditText>
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/tableRow3"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                  android:textStyle="bold"
+                   android:textColor="@android:color/black"
+                android:text="@string/birthday" />
+
+            <TextView
+                android:id="@+id/txtBirthday"
+                android:layout_span="8"
+                 android:textColor="@android:color/black"
+                android:text="@string/select_dob"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                >
+            </TextView>
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/tableRow4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/textView1"
+                 android:textColor="@android:color/black"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                  android:textStyle="bold"
+                android:text="@string/phone" />
+
+            <EditText
+                android:id="@+id/edt_phone"
+                android:layout_span="8"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="phone" >
+            </EditText>
+        </TableRow>
+
+        <TableRow
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                  android:textStyle="bold"
+                   android:textColor="@android:color/black"
+                 
+                  android:layout_gravity="center_vertical"
+                android:text="@string/gender" />
+
+            <Spinner
+                android:id="@+id/spinnerGender"
+               android:layout_span="8"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+               >
+           </Spinner>
+        </TableRow>
+    </TableLayout>
+
+    <Button
+        android:id="@+id/btn_join"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:background="@color/button_blue"
+        android:textStyle="bold"
+        android:layout_marginRight="@dimen/home_page_padding"
+        android:layout_marginLeft="@dimen/home_page_padding"
+        android:layout_below="@+id/table_layout"
+        android:text="@string/join_b_world" />
+
+    <TextView
+        android:id="@+id/text_terms"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btn_join"
+        android:layout_centerHorizontal="true"
+        android:textColor="@android:color/black"
+        android:layout_marginTop="25dp"
+        android:text="@string/see_our_terms_of_service_privacy_policy" />
+
+</RelativeLayout>

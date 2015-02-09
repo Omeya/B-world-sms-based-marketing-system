@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="header_padding">10dp</dimen>
+    
+    
+     <dimen name="home_page_padding">10dp</dimen>
+      <dimen name="signup_page_image_size">75dp</dimen>
+      <dimen name="padding_home_linear_buttons">10dp</dimen>
+    
+</resources>

@@ -1,0 +1,370 @@
+package com.bworld.Activities.common;
+
+import java.io.File;
+import java.io.IOException;
+
+import org.json.JSONObject;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.app.Dialog;
+import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.DatePicker;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
+
+import com.bworld.R;
+import com.bworld.Activities.SBM.AutoSMS;
+import com.bworld.constants.GlobalConstants;
+import com.bworld.constants.IImageConstants;
+import com.bworld.constants.IJSONTagConstants;
+import com.bworld.constants.IResponseConstants;
+import com.bworld.constants.IResultCodeConstants;
+import com.bworld.constants.URLConstants;
+import com.bworld.manager.APIManager;
+import com.bworld.manager.AlertManager;
+import com.bworld.manager.AppPreferenceManager;
+import com.bworld.manager.CustomProgressDialog;
+import com.bworld.manager.Utils;
+import com.bworld.misc.ImageUtils;
+
+public class Signup extends Activity implements IResultCodeConstants,OnClickListener,URLConstants,IResponseConstants,IJSONTagConstants,IImageConstants
+{
+
+	
+	private Button 		btnJoin;
+	private TextView    txtTerms;
+	private EditText 	edtFirstname;
+	private EditText 	edtLastname;
+	private EditText 	edtEmail;
+	private EditText 	edtPassword;
+	private TextView 	txtBirthday;
+	private EditText 	edtPhone;
+	private ImageView 	imgProfile;
+	private Intent i;
+	CustomProgressDialog progress;
+	private String[] spinnerItems = { "Select", "Male", "Female" };
+	private Spinner mGender;
+	private DatePicker mDob;
+	
+	ArrayAdapter<String> adapter;
+	AlertDialog.Builder builder;
+	AlertDialog dialog;
+	private Uri mImageCaptureUri;
+	private String filepath="";
+	private int viewID;
+	private RelativeLayout relativeHeader;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.signup);
+		initialiseUI();
+		Utils.getCalender();
+		clickListeners();
+		dialogImageChooser();
+	}
+	
+	class SignupProcess extends AsyncTask<Void, Void, Void>
+	{
+		private boolean isException=false;
+		private String response;
+		APIManager manager;
+		JSONObject resObj;
+		private String [] name={"username","password","name","dob","gender"};
+		private String [] values={edtEmail.getText().toString(),edtPassword.getText().toString()
+				,edtFirstname.getText().toString(),txtBirthday.getText().toString(),mGender.getSelectedItem().toString()};
+
+		@Override
+		protected void onPostExecute(Void result) {
+			super.onPostExecute(result);
+			progress.dismiss();
+			if(isException)
+			{
+				AlertManager.shorttoastMessage(Signup.this,getString(R.string.common_error) );
+			}
+			else
+			{
+				if(response.contains(SUCCESS_CODE))
+				{
+					try
+					{
+						AlertManager.shorttoastMessage(Signup.this,getString(R.string.signup_success));
+						
+						resObj = new JSONObject(response);
+						AppPreferenceManager.saveUserId(Signup.this, resObj.optString(USER));
+						i  = new Intent(Signup.this,HomePage.class);
+						startActivityForResult(i, TO_HOME_PAGE);
+					//	finish();
+					}
+					catch (Exception e) {
+					}
+				}
+				else 
+				{
+					AlertManager.shorttoastMessage(Signup.this,getString(R.string.common_error) );
+				}
+			}
+		}
+
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			progress.show();
+			manager = new APIManager(URL_SIGN_UP);
+			
+		}
+
+		@Override
+		protected Void doInBackground(Void... params) 
+		{
+			try
+			{
+				response= manager.imageUpload("image", filepath, URL_SIGN_UP, name, values);
+				//response=manager.commonPostData(URL_SIGN_UP, name, values);
+				Log.e("", "Response"+response);
+			}
+			catch (Exception e)
+			{
+				isException=true;
+			}
+			return null;
+		}
+		
+	}
+	@Override
+	protected Dialog onCreateDialog(int id) 
+	{
+	  switch (id) 
+		{
+		case GlobalConstants.DATE_DIALOG_ID:
+			return new DatePickerDialog(this, datePickerListener, GlobalConstants.year, GlobalConstants.month,GlobalConstants.day);
+		}
+		return null;
+	}
+	
+	private DatePickerDialog.OnDateSetListener datePickerListener = new DatePickerDialog.OnDateSetListener() 
+	{
+		public void onDateSet(DatePicker view, int selectedYear,int selectedMonth, int selectedDay)
+		{
+			GlobalConstants.year = selectedYear;
+			GlobalConstants.month = selectedMonth+1;
+			GlobalConstants.day = selectedDay;
+			
+			switch(viewID)
+			{
+				case R.id.txtBirthday:
+					txtBirthday.setText(GlobalConstants.month+"/"+GlobalConstants.day+"/"+GlobalConstants.year);
+					break;
+				
+			}
+		}
+	};
+	private void initialiseUI()
+	{
+		relativeHeader		= (RelativeLayout)findViewById(R.id.relative_header);
+		edtFirstname			=(EditText)findViewById(R.id.edt_firstname);
+		edtLastname				=(EditText)findViewById(R.id.edt_lastname);
+		edtEmail				=(EditText)findViewById(R.id.edt_email);
+		edtPassword				=(EditText)findViewById(R.id.edt_password);
+		txtBirthday				=(TextView)findViewById(R.id.txtBirthday);
+		edtPhone				=(EditText)findViewById(R.id.edt_phone);
+		mGender					=(Spinner)findViewById(R.id.spinnerGender);
+		
+		imgProfile				=(ImageView)findViewById(R.id.image_profile);
+		
+		txtTerms				=(TextView)findViewById(R.id.text_terms);
+		btnJoin					=(Button)findViewById(R.id.btn_join);
+		
+		progress		=CustomProgressDialog.show(Signup.this, false);
+		
+		ArrayAdapter<CharSequence> nadapter = ArrayAdapter.createFromResource(
+				this, R.array.Gender, R.layout.spinner_textview);
+
+		mGender.setAdapter(nadapter);
+		Utils.getHeader(Signup.this, relativeHeader, getString(R.string.registration_head));
+	}
+	
+	@Override
+	public void onClick(View v)
+	{
+		if(v==btnJoin)
+		{
+			if(edtFirstname.getText().toString().length()<1)
+			{
+				AlertManager.shorttoastMessage(Signup.this, getString(R.string.enter_valid_fname));
+			}
+			else if(edtLastname.getText().toString().length()<1)
+			{
+				AlertManager.shorttoastMessage(Signup.this, getString(R.string.enter_valid_lname));
+			}
+			else if(edtEmail.getText().toString().length()<1)
+			{
+				AlertManager.shorttoastMessage(Signup.this, getString(R.string.enter_email));
+			}
+			else if(edtPassword.getText().toString().length()<1)
+			{
+				AlertManager.shorttoastMessage(Signup.this, getString(R.string.Enter_password));
+			}
+			else if(!Utils.checkValidEmail(edtEmail.getText().toString()))
+			{
+				AlertManager.shorttoastMessage(Signup.this, getString(R.string.enter_valid_email));
+			}
+			else if(filepath.equals(""))
+			{
+				AlertManager.shorttoastMessage(Signup.this, getString(R.string.select_profile_picture));
+			}
+			else if(mGender.getSelectedItem().toString().equals("Select"))
+			{
+				AlertManager.shorttoastMessage(Signup.this, getString(R.string.select_gender));
+			}
+			else
+			{
+				if(Utils.checkInternetConnection(Signup.this))
+				{
+					SignupProcess process   = new SignupProcess();
+					process.execute();
+				}
+				else
+				{
+					AlertManager.shorttoastMessage(Signup.this,getString(R.string.Internet_check) );
+				}
+				//i  = new Intent(Signup.this,AutoSMS.class);
+				//startActivity(i);
+			}
+		}
+		else if(v==txtBirthday)
+		{
+			viewID=v.getId();
+			showDialog(GlobalConstants.DATE_DIALOG_ID);
+		}
+		else if(v==txtTerms)
+		{
+			
+		}
+		else if(v==imgProfile)
+		{
+			dialog.show();
+		}
+		
+	}
+
+	private void clickListeners()
+	{
+		btnJoin.setOnClickListener(this);
+		imgProfile.setOnClickListener(this);
+		txtTerms.setOnClickListener(this);
+		txtBirthday.setOnClickListener(this);
+	}
+	private void dialogImageChooser()
+	{
+		adapter = new ArrayAdapter<String>(this,
+				android.R.layout.select_dialog_item, IMAGE_DOUBLE_OPTIONS);
+		builder = new AlertDialog.Builder(this);
+
+		builder.setTitle("Select Image");
+		builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int item) 
+			{ // pick from
+				if (item == 0) {
+					Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+					mImageCaptureUri = Uri.fromFile(new File(Environment
+							.getExternalStorageDirectory(), "tmp_avatar_"
+							+ String.valueOf(System.currentTimeMillis())
+							+ ".jpg"));
+
+					intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT,
+							mImageCaptureUri);
+
+					try {
+						intent.putExtra("return-data", true);
+
+						startActivityForResult(intent, PICK_FROM_CAMERA);
+					} catch (ActivityNotFoundException e) {
+						e.printStackTrace();
+					}
+				}
+				else
+				{
+					Intent intent = new Intent();
+
+					intent.setType("image/*");
+					intent.setAction(Intent.ACTION_GET_CONTENT);
+
+					startActivityForResult(Intent.createChooser(intent,
+							"Complete action using"), PICK_FROM_FILE);
+				}
+					
+				
+			}
+		});
+
+		dialog = builder.create();
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		
+		/*if(resultCode==LOGIN_SUCESS)
+    	{
+    		setResult(LOGIN_SUCESS);
+    		finish();
+    		return;
+    	}*/
+		if (resultCode != RESULT_OK)
+			return;
+
+		switch (requestCode) 
+		{
+		case PICK_FROM_CAMERA:
+		//	mImageCaptureUri = data.getData();
+			ImageUtils.doCrop(Signup.this, mImageCaptureUri);
+
+			break;
+
+		case PICK_FROM_FILE:
+			mImageCaptureUri = data.getData();
+
+			ImageUtils.doCrop(Signup.this, mImageCaptureUri);
+
+			break;
+
+		case CROP_FROM_CAMERA:
+			Bundle extras = data.getExtras();
+
+			if (extras != null) {
+				try {
+					Bitmap photo = extras.getParcelable("data");
+					imgProfile.setImageBitmap(photo);
+					filepath = Utils.toFile(photo);
+					Log.e("","File path"+filepath);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			}
+			break;
+
+		}
+	}
+	
+}

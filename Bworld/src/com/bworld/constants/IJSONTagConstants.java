@@ -1,0 +1,59 @@
+package com.bworld.constants;
+
+public interface IJSONTagConstants {
+
+	public String STATUS									="status";
+	public String USER										="user";
+	public String CODE										="code";
+	public String MESSAGE									="message";
+	
+	
+	
+	/*FOR CONTACTS*/
+	
+	public String CONTACTS									="contacts";
+	public String CONTACT_NAME								="name";
+	public String CONTACT_NUMBER							="number";
+	public String CONTACT_SELECTED							="selected";
+	public String PHONE_NUMBER								="phonenumber";
+	
+	
+	/*PROFILE*/
+	public String PROFILE_USER								="user";
+	public String PROFILE_USERNAME							="username";
+	public String PROFILE_FIRST_NAME						="name";
+	public String PROFILE_LAST_NAME							="lastname";
+	public String PROFILE_IMAGE								="image";
+	public String PROFILE_GENDER							="gender";
+	public String PROFILE_TOTAL_SMS							="total_sms";
+	public String PROFILE_SMS_SENT_TODAY					="sms_sent_today";
+	public String PROFILE_EARNING							="total_earning";
+	
+	
+	public String ADVERTISMENTS								="advertisements";
+	public String AD_ID										="id";
+	public String AD_TITLE									="title";
+	public String AD_DESCRIPTION							="description";
+	public String AD_TIME									="campaign_time";
+	public String AD_IMAGE									="image";
+	public String AD_SMS_LIMIT								="sms_limit";
+	public String AD_END_TIME								="end_time";
+	public String AD_START_TIME								="start_time";
+	
+	
+	
+	public String FRIENDS_USERS								="users";
+	public String FRIENDS_ID								="id";
+	public String FRIENDS_USERNAME							="username";
+	public String FRIENDS_FIRST_NAME						="name";
+	public String FRIENDS_LAST_NAME							="lastname";
+	public String FRIENDS_IMAGE								="image";
+	public String FRIENDS_GENDER							="gender";
+	public String FRIENDS_TOTAL_SMS							="total_sms";
+	public String FRIENDS_SMS_SENT_TODAY					="sms_sent_today";
+	public String FRIENDS_EARNING							="total_earning";
+	public String FRIENDS_STATUS							="friendship_status";
+	public String FRIENDS_LATITUDE							="lattitude";
+	public String FRIENDS_LONGITUDE							="longitude";
+	
+}

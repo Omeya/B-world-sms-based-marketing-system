@@ -1,0 +1,495 @@
+package com.bworld.misc;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import com.bworld.R;
+
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
+
+
+
+// TODO: Auto-generated Javadoc
+/**
+ * The Class PhotosManager.
+ */
+public class PhotosManager {
+
+	/** The memory cache. */
+	MemoryCache memoryCache = new MemoryCache();
+	
+	/** The file cache. */
+	FileCache fileCache;
+	
+	/** The utils. */
+	ImageUtils utils;
+	
+	/** The sample size. */
+	int sampleSize;
+	
+	/** The image views. */
+	private Map<ImageView, String> imageViews = Collections
+			.synchronizedMap(new WeakHashMap<ImageView, String>());
+	
+	/** The executor service. */
+	ExecutorService executorService;
+
+	/**
+	 * Instantiates a new photos manager.
+	 *
+	 * @param context the context
+	 * @param directory the directory
+	 * @param sampleSize the sample size
+	 */
+	public PhotosManager(Context context, String directory, int sampleSize) {
+		fileCache = new FileCache(context, directory);
+		executorService = Executors.newFixedThreadPool(5);
+		this.sampleSize = sampleSize;
+		utils = new ImageUtils();
+	}
+
+	/**
+	 * Display image.
+	 *
+	 * @param url the url
+	 * @param imageView the image view
+	 */
+	public void DisplayImage(String url, ImageView imageView) {
+		imageViews.put(imageView, url);
+		Bitmap bitmap = memoryCache.get(url);
+		if (bitmap != null) {
+			imageView.setImageBitmap(bitmap);
+			imageView.setScaleType(ScaleType.FIT_XY);
+			bitmap = null;
+		} else {
+			queuePhoto(url, imageView);
+		}
+	}
+	public void DisplayImage(String url, ImageView imageView, View progress,String object) {
+		imageViews.put(imageView, url);
+		Bitmap bitmap = memoryCache.get(url);
+		if (bitmap != null) {
+			imageView.setImageBitmap(bitmap);
+			imageView.setScaleType(ScaleType.FIT_XY);
+			progress.setVisibility(View.GONE);
+			bitmap = null;
+		} else {
+			if (progress != null)
+				imageView.setImageBitmap(null);
+			progress.setVisibility(View.VISIBLE);
+			
+			
+			queuePhoto(url, imageView, progress, object);
+		}
+	}
+	/**
+	 * Display image.
+	 *
+	 * @param url the url
+	 * @param imageView the image view
+	 * @param roundCorner the round corner
+	 */
+	public void DisplayImage(String url, ImageView imageView,
+			boolean roundCorner) {
+
+		imageViews.put(imageView, url);
+		Bitmap bitmap = memoryCache.get(url);
+		if (bitmap != null) {
+			if (roundCorner) {
+				bitmap = ImageUtils.getShadowBitmap(ImageUtils.getRoundedCornerBitmap(
+						bitmap, 10));
+			}
+			imageView.setImageBitmap(bitmap);
+			imageView.setScaleType(ScaleType.FIT_XY);
+			bitmap = null;
+		} else {
+			if (roundCorner) {
+				queuePhoto(url, imageView, true);
+			} else {
+				queuePhoto(url, imageView);
+			}
+		}
+	}
+
+	/**
+	 * Display image.
+	 *
+	 * @param url the url
+	 * @param imageView the image view
+	 * @param roundCorner the round corner
+	 * @param progress the progress
+	 */
+	public void DisplayImage(String url, ImageView imageView,
+			boolean roundCorner, View progress) {
+		imageViews.put(imageView, url);
+		Bitmap bitmap = memoryCache.get(url);
+		if (bitmap != null) {
+			if (roundCorner) {
+				bitmap = ImageUtils.getShadowBitmap(ImageUtils.getRoundedCornerBitmap(
+						bitmap, 10));
+			}
+			imageView.setImageBitmap(bitmap);
+			imageView.setScaleType(ScaleType.FIT_XY);
+			progress.setVisibility(View.GONE);
+			bitmap = null;
+		} else {
+			if (progress != null)
+				progress.setVisibility(View.VISIBLE);
+			queuePhoto(url, imageView, true, progress);
+		}
+	}
+
+	/**
+	 * Display image.
+	 *
+	 * @param url the url
+	 * @param imageView the image view
+	 * @param progress the progress
+	 */
+	public void DisplayImage(String url, ImageView imageView, View progress) throws Exception {
+		imageViews.put(imageView, url);
+		Bitmap bitmap = memoryCache.get(url);
+		if (bitmap != null) {
+			imageView.setImageBitmap(bitmap);
+			Log.e("", "height"+bitmap.getHeight()+"Width"+bitmap.getWidth());
+			imageView.setScaleType(ScaleType.FIT_XY);
+			progress.setVisibility(View.GONE);
+			bitmap = null;
+		} else {
+			if (progress != null)
+				imageView.setImageBitmap(null);
+			progress.setVisibility(View.VISIBLE);
+			queuePhoto(url, imageView, progress);
+		}
+	}
+
+	/**
+	 * Queue photo.
+	 *
+	 * @param url the url
+	 * @param imageView the image view
+	 */
+	private void queuePhoto(String url, ImageView imageView) {
+		PhotoToLoad p = new PhotoToLoad(url, imageView);
+		executorService.submit(new PhotosLoader(p));
+	}
+
+	/**
+	 * Queue photo.
+	 *
+	 * @param url the url
+	 * @param imageView the image view
+	 * @param roundCorner the round corner
+	 */
+	private void queuePhoto(String url, ImageView imageView, boolean roundCorner) {
+		PhotoToLoad p = new PhotoToLoad(url, imageView, roundCorner);
+		executorService.submit(new PhotosLoader(p));
+	}
+
+	/**
+	 * Queue photo.
+	 *
+	 * @param url the url
+	 * @param imageView the image view
+	 * @param roundCorner the round corner
+	 * @param progress the progress
+	 */
+	private void queuePhoto(String url, ImageView imageView,
+			boolean roundCorner, View progress) {
+		PhotoToLoad p = new PhotoToLoad(url, imageView, roundCorner, progress);
+		executorService.submit(new PhotosLoader(p));
+	}
+
+	/**
+	 * Queue photo.
+	 *
+	 * @param url the url
+	 * @param imageView the image view
+	 * @param progress the progress
+	 */
+	private void queuePhoto(String url, ImageView imageView, View progress) {
+		PhotoToLoad p = new PhotoToLoad(url, imageView, progress);
+		executorService.submit(new PhotosLoader(p));
+	}
+
+	private void queuePhoto(String url, ImageView imageView, View progress,
+			String parseObject) {
+		PhotoToLoad p = new PhotoToLoad(url, imageView, progress, parseObject);
+		executorService.submit(new PhotosLoader(p));
+	}
+	
+	/**
+	 * Gets the bitmap.
+	 *
+	 * @param url the url
+	 * @return the bitmap
+	 */
+	public Bitmap getBitmap(String url) {
+		File f = fileCache.getFile(url);
+		// from SD cache
+		Bitmap b = decodeFile(f);
+		if (b != null)
+			return b;
+
+		// from web
+		try {
+			Bitmap bitmap = null;
+			URL imageUrl = new URL(url);
+			HttpURLConnection conn = (HttpURLConnection) imageUrl.openConnection();
+			conn.setConnectTimeout(30000);
+			conn.setReadTimeout(30000);
+			conn.setInstanceFollowRedirects(true);
+			InputStream is = conn.getInputStream();
+			OutputStream os = new FileOutputStream(f);
+			utils.CopyStream(is, os);
+			os.close();
+			Log.v("", "downloaded: " + url);
+			bitmap = decodeFile(f);
+			return bitmap;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}
+	}
+
+	// decodes image and scales it to reduce memory consumption
+	/**
+	 * Decode file.
+	 *
+	 * @param f the f
+	 * @return the bitmap
+	 */
+	private Bitmap decodeFile(File f) {
+		try {
+			// decode image size
+			BitmapFactory.Options o = new BitmapFactory.Options();
+			o.inJustDecodeBounds = true;
+			BitmapFactory.decodeStream(new FileInputStream(f), null, o);
+
+			// Find the correct scale value. It should be the power of 2.
+			final int REQUIRED_SIZE = sampleSize;
+			int width_tmp = o.outWidth, height_tmp = o.outHeight;
+			int scale = 1;
+			/*
+			 * while (true) { if (width_tmp / 2 < REQUIRED_SIZE || height_tmp /
+			 * 2 < REQUIRED_SIZE) break; width_tmp /= 2; height_tmp /= 2; scale
+			 * *= 2; }
+			 */
+			// decode with inSampleSize
+			BitmapFactory.Options o2 = new BitmapFactory.Options();
+			o2.inSampleSize = scale;
+			return BitmapFactory.decodeStream(new FileInputStream(f), null, o2);
+		} catch (FileNotFoundException e) {
+		}
+		return null;
+	}
+
+	// Task for the queue
+	/**
+	 * The Class PhotoToLoad.
+	 */
+	private class PhotoToLoad {
+		
+		/** The url. */
+		public String url;
+		
+		/** The image view. */
+		public ImageView imageView;
+		
+		/** The progress. */
+		private View progress = null;
+		
+		/** The round corner. */
+		private boolean roundCorner = false;
+		
+		String res;
+
+		/**
+		 * Instantiates a new photo to load.
+		 *
+		 * @param u the u
+		 * @param i the i
+		 */
+		public PhotoToLoad(String u, ImageView i) {
+			url = u;
+			imageView = i;
+		}
+
+		/**
+		 * Instantiates a new photo to load.
+		 *
+		 * @param u the u
+		 * @param i the i
+		 * @param pro the pro
+		 */
+		public PhotoToLoad(String u, ImageView i, View pro) {
+			url = u;
+			imageView = i;
+			progress = pro;
+		}
+
+		/**
+		 * Instantiates a new photo to load.
+		 *
+		 * @param u the u
+		 * @param i the i
+		 * @param corner the corner
+		 */
+		public PhotoToLoad(String u, ImageView i, boolean corner) {
+			url = u;
+			imageView = i;
+			roundCorner = corner;
+		}
+
+		/**
+		 * Instantiates a new photo to load.
+		 *
+		 * @param u the u
+		 * @param i the i
+		 * @param corner the corner
+		 * @param pro the pro
+		 */
+		public PhotoToLoad(String u, ImageView i, boolean corner, View pro) {
+			url = u;
+			imageView = i;
+			roundCorner = corner;
+			progress = pro;
+		}
+		
+		public PhotoToLoad(String u, ImageView i, View pro,String parseObject) {
+			url = u;
+			imageView = i;
+			progress = pro;
+			res = parseObject;
+			System.out.println("url *******  " + u);
+			System.out.println("Parse Object " + res);
+		}
+		
+	}
+	
+	
+
+	/**
+	 * The Class PhotosLoader.
+	 */
+	class PhotosLoader implements Runnable {
+		
+		/** The photo to load. */
+		PhotoToLoad photoToLoad;
+
+		/**
+		 * Instantiates a new photos loader.
+		 *
+		 * @param photoToLoad the photo to load
+		 */
+		PhotosLoader(PhotoToLoad photoToLoad) {
+			this.photoToLoad = photoToLoad;
+		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			if (imageViewReused(photoToLoad))
+				return;
+			Bitmap bmp = getBitmap(photoToLoad.url);
+			memoryCache.put(photoToLoad.url, bmp);
+			if (imageViewReused(photoToLoad))
+				return;
+			BitmapDisplayer bd = new BitmapDisplayer(bmp, photoToLoad);
+			Activity a = (Activity) photoToLoad.imageView.getContext();
+			a.runOnUiThread(bd);
+		}
+	}
+
+	/**
+	 * Image view reused.
+	 *
+	 * @param photoToLoad the photo to load
+	 * @return true, if successful
+	 */
+	boolean imageViewReused(PhotoToLoad photoToLoad) {
+		String tag = imageViews.get(photoToLoad.imageView);
+		if (tag == null || !tag.equals(photoToLoad.url))
+			return true;
+		return false;
+	}
+
+	// Used to display bitmap in the UI thread
+	/**
+	 * The Class BitmapDisplayer.
+	 */
+	class BitmapDisplayer implements Runnable {
+		
+		/** The bitmap. */
+		Bitmap bitmap;
+		
+		/** The photo to load. */
+		PhotoToLoad photoToLoad;
+
+		/**
+		 * Instantiates a new bitmap displayer.
+		 *
+		 * @param b the b
+		 * @param p the p
+		 */
+		public BitmapDisplayer(Bitmap b, PhotoToLoad p) {
+			bitmap = b;
+			photoToLoad = p;
+		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Runnable#run()
+		 */
+		public void run() {
+			if (imageViewReused(photoToLoad))
+				return;
+			if (bitmap != null) {
+				if (photoToLoad.roundCorner) {
+					photoToLoad.imageView.setImageBitmap(ImageUtils
+							.getShadowBitmap(ImageUtils.getRoundedCornerBitmap(
+									bitmap, 10)));
+				} else {
+					photoToLoad.imageView.setImageBitmap(bitmap);
+				}
+				if (photoToLoad.progress != null) {
+					photoToLoad.progress.setVisibility(View.INVISIBLE);
+				}
+				bitmap = null;
+			}
+			else
+			{
+				photoToLoad.progress.setVisibility(View.INVISIBLE);
+				photoToLoad.imageView.setBackgroundResource(R.drawable.verify_info_thumb);
+			}
+		}
+	}
+
+	/**
+	 * Clear cache.
+	 */
+	public void clearCache() {
+		memoryCache.clear();
+		fileCache.clear();
+	}
+
+}

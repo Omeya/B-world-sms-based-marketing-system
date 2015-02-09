@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+   android:background="@drawable/bg"
+    android:orientation="vertical" >
+<RelativeLayout 
+    android:layout_width="match_parent"
+    android:id="@+id/relative_header"
+    android:layout_height="wrap_content"
+    ></RelativeLayout>
+    
+
+<LinearLayout 
+     android:layout_width="match_parent"
+  android:id="@+id/linear_search"
+    android:layout_below="@+id/relative_header"
+    android:layout_height="wrap_content"
+    >
+    
+    <EditText 
+          android:layout_width="0dp"
+    android:id="@+id/edtSearch"
+    android:inputType="text"
+    android:layout_weight="0.85"
+    android:hint="@string/search_contacts"
+    android:layout_height="wrap_content"/>
+    
+    
+    <CheckBox 
+         android:layout_width="0dp"
+         android:id="@+id/checkAll"
+        android:layout_marginLeft="5dp"
+         android:button="@drawable/checkbox_off_background"
+         android:layout_weight="0.15"
+         android:layout_height="wrap_content"
+        />
+</LinearLayout>
+    
+    <ListView
+        android:id="@+id/list_contacts"
+        android:layout_below="@+id/linear_search"
+        
+        android:layout_width="match_parent"
+        android:layout_above="@+id/btn_ok"
+        android:cacheColorHint="@android:color/transparent"
+        android:layout_height="wrap_content" >
+    </ListView>
+<Button
+        android:id="@+id/btn_ok"
+        
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+          android:background="@color/button_blue"
+        android:padding="15dp"
+      
+        android:text="@string/add_contacts"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+</RelativeLayout>
